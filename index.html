@@ -3,454 +3,88 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ajude um amigo</title>
-  <meta name="description" content="Ajude um amigo — contribuição via Pix" />
-
+  <title>Admin • Ajude um amigo</title>
   <style>
-    :root {
-      --glass: rgba(255,255,255,.14);
-      --glass2: rgba(255,255,255,.10);
-      --stroke: rgba(255,255,255,.25);
-      --text: #ffffff;
-      --shadow: rgba(0,0,0,.35);
-    }
-
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-
-    body{
-      color: var(--text);
-      overflow-x: hidden;
-      overflow-y: auto;
-      background:
-        radial-gradient(1200px 700px at 50% 30%, rgba(255,255,255,.10), transparent 60%),
-        linear-gradient(180deg, #0b3d14 0%, #0f6b22 35%, #0b4f1a 100%),
-        repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, rgba(0,0,0,.05) 2px 6px),
-        repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 3px, rgba(0,0,0,.04) 3px 9px);
-      background-blend-mode: screen, normal, overlay, overlay;
-    }
-
-    .wrap{
-      position:relative;
-      min-height:100vh;
-      display:grid;
-      grid-template-columns: 1fr min(540px, 92vw) 1fr;
-      grid-template-rows: 1fr;
-      align-items:center;
-      gap:18px;
-      padding:18px;
-    }
-
-    header{
-      position:sticky; top:0;
-      padding-top:18px;
-      display:flex; justify-content:center;
-      pointer-events:none;
-      z-index:10;
-    }
-
-    .brand{
-      pointer-events:auto;
-      padding:12px 18px; border-radius:999px;
-      background:var(--glass); border:1px solid var(--stroke);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 16px 40px var(--shadow);
-      text-transform: uppercase; letter-spacing:.12em;
-      font-weight:800; font-size:14px;
-    }
-
-    .card{
-      grid-column:2;
-      width:100%;
-      border-radius:22px;
-      background: linear-gradient(180deg, var(--glass), var(--glass2));
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 24px 60px var(--shadow);
-      padding:22px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .title{ font-size: clamp(26px, 3.2vw, 42px); margin:0 0 6px 0; text-align:center; font-weight:900; }
-    .subtitle{ margin:0 0 18px 0; text-align:center; opacity:.95; }
-    .content{ display:grid; gap:14px; justify-items:center; }
-
-    .qrbox{
-      width:min(320px, 90vw);
-      aspect-ratio:1/1;
-      border-radius:18px;
-      background: rgba(255,255,255,.92);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 18px 40px rgba(0,0,0,.30);
-      overflow: visible;
-    }
-
-    #qrcode{
-      width:100%;
-      height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transform:none;
-    }
-
-    #qrcode img,
-    #qrcode canvas{
-      width:100% !important;
-      height:100% !important;
-      object-fit:contain;
-      display:block;
-    }
-
-    .key{
-      width:100%; max-width:520px;
-      padding:12px 14px; border-radius:14px;
-      background: rgba(0,0,0,.30);
-      border:1px solid rgba(255,255,255,.25);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
-
-    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
-
-    button{
-      appearance:none; border:0; cursor:pointer;
-      padding:12px 14px; border-radius:14px;
-      font-weight:800; color:#06210c; background: rgba(255,255,255,.92);
-      box-shadow:0 12px 24px rgba(0,0,0,.28);
-      transition: transform .08s ease, filter .08s ease;
-    }
-    button:hover{ filter: brightness(1.02); }
-    button:active{ transform: translateY(1px) scale(.99); }
-
-    .ghost{
-      color:#fff; background: rgba(0,0,0,.28);
-      border:1px solid rgba(255,255,255,.20);
-      box-shadow:0 12px 24px rgba(0,0,0,.18);
-    }
-
-    .hint{ margin:8px 0 0 0; opacity:.9; text-align:center; font-size:13px; }
-
-    .rank{
-      grid-column:3;
-      justify-self:end;
-      align-self:stretch;
-      width:min(340px, 42vw);
-      border-radius:22px;
-      background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.16));
-      border:1px solid rgba(255,255,255,.22);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 24px 60px rgba(0,0,0,.28);
-      padding:14px;
-      overflow:hidden;
-      display:grid;
-      grid-template-rows:auto auto 1fr auto;
-      gap:10px;
-    }
-
-    .rank h2{ margin:0; font-size:16px; letter-spacing:.10em; text-transform:uppercase; text-align:center; }
-    .rank .top{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
-
-    .pill{
-      padding:8px 10px; border-radius:999px;
-      background: rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.18);
-      font-size:12px; opacity:.95;
-    }
-
-    .rank .list{
-      overflow:auto;
-      border-radius:16px;
-      background: rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.16);
-    }
-    .rank ul{ list-style:none; margin:0; padding:10px; display:grid; gap:8px; }
-    .rank li{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px; padding:10px 12px;
-      border-radius:14px; background: rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.14);
-    }
-    .rank .name{ font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .rank .value{ font-variant-numeric: tabular-nums; font-weight:900; white-space:nowrap; }
-    .rank .foot{ text-align:center; font-size:12px; opacity:.85; padding-bottom:2px; }
-
-    /* ✅ MOBILE: QR menor + botões em coluna (ADM não corta) */
-    @media (max-width: 980px){
-      .wrap{
-        grid-template-columns:1fr;
-        grid-template-rows:auto auto;
-        align-content:start;
-      }
-      .card{ grid-column:1; }
-      .rank{
-        grid-column:1;
-        width:100%;
-        height: 360px;
-        justify-self:center;
-      }
-
-      .qrbox{
-        width: min(260px, 86vw);
-      }
-
-      .btnrow{
-        flex-direction: column;
-        width: 100%;
-        align-items: stretch;
-      }
-      .btnrow button,
-      .btnrow a{
-        width: 100%;
-        text-align: center;
-      }
-
-      header{
-        padding-top: 10px;
-        padding-bottom: 8px;
-      }
-    }
-
-    /* Corações */
-    .heart{
-      position:absolute; bottom:-40px; left:0;
-      font-size:18px; opacity:.92;
-      filter: drop-shadow(0 8px 10px rgba(0,0,0,.25));
-      animation: floatUp linear forwards;
-      pointer-events:none; user-select:none;
-    }
-    @keyframes floatUp{
-      0%{ transform: translateY(0) translateX(0) scale(1); opacity:0; }
-      10%{ opacity:.92; }
-      100%{ transform: translateY(-120vh) translateX(var(--dx)) scale(var(--s)); opacity:0; }
-    }
-
-    /* Overlay de som */
-    .soundOverlay{
-      position:fixed; inset:0;
-      display:none; place-items:center;
-      background: rgba(0,0,0,.55);
-      backdrop-filter: blur(6px);
-      z-index:50; padding:18px;
-    }
-    .soundOverlay .panel{
-      width: min(520px, 92vw);
-      border-radius:22px;
-      background: rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.22);
-      box-shadow: 0 24px 60px rgba(0,0,0,.40);
-      padding:18px; text-align:center;
-    }
-    .soundOverlay .panel h3{ margin:0 0 6px 0; font-size:18px; }
-    .soundOverlay .panel p{ margin:0 0 14px 0; opacity:.9; }
+    body{ margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0b3d14; color:#fff; }
+    .wrap{ min-height:100vh; display:grid; place-items:center; padding:20px; }
+    .card{ width:min(520px, 92vw); background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.22); border-radius:18px; padding:18px; }
+    input,button{ width:100%; padding:12px; border-radius:12px; border:0; margin-top:10px; font-size:16px; }
+    button{ font-weight:900; cursor:pointer; }
+    .muted{ opacity:.9; font-size:13px; margin-top:10px; }
+    .hidden{ display:none; }
+    a{ color:#fff; }
   </style>
 </head>
-
 <body>
-  <header><div class="brand">Ajude um amigo</div></header>
-
   <div class="wrap">
-    <main class="card">
-      <h1 class="title">Ajude um amigo</h1>
-      <p class="subtitle">Escaneie o QR Code ou copie a chave Pix abaixo 🙏</p>
+    <div class="card">
+      <h2 style="margin:0 0 8px 0;">Área Admin</h2>
+      <div id="login">
+        <div>Digite a senha:</div>
+        <input id="pass" type="password" placeholder="Senha" />
+        <button id="btn">Entrar</button>
+        <div class="muted">Dica: se esquecer, edite o arquivo <b>admin.html</b> no GitHub.</div>
+      </div>
 
-      <div class="content">
-        <div class="qrbox"><div id="qrcode"></div></div>
-
-        <div class="key" id="pixKey" title="2ef2b7a6-bfb3-4cf4-a164-536e002aa6dc">
-          2ef2b7a6-bfb3-4cf4-a164-536e002aa6dc
+      <div id="panel" class="hidden">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+          <b>Logado ✅</b>
+          <button id="logout" style="width:auto;padding:10px 12px;">Sair</button>
         </div>
 
-        <div class="btnrow">
-          <button id="copyBtn">Copiar chave Pix</button>
-          <button id="soundBtn" class="ghost" type="button">🔊 Som</button>
+        <p class="muted">
+          Coloque aqui o seu painel/ações de admin.  
+          Se você já tinha um admin antigo, me cole ele aqui que eu encaixo dentro desse “panel” mantendo sua senha.
+        </p>
 
-          <a class="ghost" href="/admin.html"
-             style="text-decoration:none;display:inline-block;padding:12px 14px;border-radius:14px;font-weight:800;">
-             ADM
-          </a>
-        </div>
-
-        <p class="hint" id="status">Dica: se o som não tocar, clique em “Som”.</p>
+        <p class="muted">
+          Voltar para o site: <a href="./">Home</a>
+        </p>
       </div>
-    </main>
-
-    <aside class="rank">
-      <h2 id="rankTitle">RANK</h2>
-      <div class="top">
-        <div class="pill" id="totalPill">Total: R$ 0,00</div>
-        <div class="pill" id="countPill">Ajudas: 0</div>
-      </div>
-      <div class="list"><ul id="rankList"></ul></div>
-      <div class="foot">Maior valor sempre em cima</div>
-    </aside>
-  </div>
-
-  <!-- ✅ Música nova: mantenha musica.mp3 na mesma pasta do index.html -->
-  <audio id="bgAudio" src="musica.mp3" preload="auto" loop></audio>
-
-  <div class="soundOverlay" id="soundOverlay" role="dialog" aria-modal="true">
-    <div class="panel">
-      <h3>Ativar som</h3>
-      <p>Seu navegador bloqueou o áudio automático. Toque no botão abaixo para liberar 🎵</p>
-      <button id="enableSoundBtn">🔊 Ativar som</button>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-
   <script>
-    const PIX_KEY = "2ef2b7a6-bfb3-4cf4-a164-536e002aa6dc";
+    // 🔐 TROQUE AQUI
+    const ADMIN_PASS = "SUA_SENHA_AQUI";
+    const KEY = "admin_ok_v1";
 
-    // QR em boa qualidade; no mobile o CSS já limita o tamanho
-    new QRCode(document.getElementById("qrcode"), {
-      text: PIX_KEY,
-      width: 300,
-      height: 300,
-      correctLevel: QRCode.CorrectLevel.M
-    });
+    const login = document.getElementById("login");
+    const panel = document.getElementById("panel");
+    const pass = document.getElementById("pass");
+    const btn = document.getElementById("btn");
+    const logout = document.getElementById("logout");
 
-    // Copiar Pix
-    const copyBtn = document.getElementById("copyBtn");
-    const statusEl = document.getElementById("status");
-    copyBtn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(PIX_KEY);
-        statusEl.textContent = "✅ Chave copiada! Cole no seu banco.";
-        popHearts(10);
-      } catch (e) {
-        statusEl.textContent = "⚠️ Não consegui copiar automaticamente. Selecione e copie a chave.";
-      }
-    });
-
-    // Música
-    const audio = document.getElementById("bgAudio");
-    const overlay = document.getElementById("soundOverlay");
-    const enableSoundBtn = document.getElementById("enableSoundBtn");
-    const soundBtn = document.getElementById("soundBtn");
-
-    async function tryAutoplay(){
-      try{
-        await audio.play();
-        soundBtn.textContent = "🔊 Som: ON";
-      } catch (err){
-        overlay.style.display = "grid";
-        soundBtn.textContent = "🔇 Som: OFF";
-      }
+    function showPanel(){
+      login.classList.add("hidden");
+      panel.classList.remove("hidden");
+    }
+    function showLogin(){
+      panel.classList.add("hidden");
+      login.classList.remove("hidden");
     }
 
-    async function enableSound(){
-      overlay.style.display = "none";
-      try{
-        await audio.play();
-        soundBtn.textContent = "🔊 Som: ON";
-      } catch (e){
-        soundBtn.textContent = "🔇 Som: OFF";
-      }
-    }
+    if(localStorage.getItem(KEY) === "1") showPanel();
 
-    function toggleSound(){
-      if(!audio.paused){
-        audio.pause();
-        soundBtn.textContent = "🔇 Som: OFF";
+    btn.addEventListener("click", () => {
+      if(pass.value === ADMIN_PASS){
+        localStorage.setItem(KEY, "1");
+        showPanel();
       } else {
-        enableSound();
+        alert("Senha errada.");
       }
-    }
+    });
 
-    enableSoundBtn.addEventListener("click", enableSound);
-    soundBtn.addEventListener("click", toggleSound);
+    logout.addEventListener("click", () => {
+      localStorage.removeItem(KEY);
+      location.reload();
+    });
 
-    window.addEventListener("pointerdown", () => {
-      if(audio.paused){
-        audio.play().then(() => {
-          overlay.style.display = "none";
-          soundBtn.textContent = "🔊 Som: ON";
-        }).catch(() => {});
-      }
-    }, { once:true });
-
-    // Corações
-    function spawnHeart(){
-      const heart = document.createElement("div");
-      heart.className = "heart";
-      heart.textContent = ["💚","💖","💛","💙","💜"][Math.floor(Math.random()*5)];
-      const x = Math.random() * 100;
-      const dx = (Math.random() * 120 - 60).toFixed(0) + "px";
-      const s  = (0.8 + Math.random() * 1.2).toFixed(2);
-      heart.style.left = x + "vw";
-      heart.style.setProperty("--dx", dx);
-      heart.style.setProperty("--s", s);
-      const dur = 4 + Math.random() * 4;
-      heart.style.animationDuration = dur + "s";
-      document.body.appendChild(heart);
-      setTimeout(() => heart.remove(), (dur + 0.2) * 1000);
-    }
-
-    function popHearts(n=6){ for(let i=0;i<n;i++) setTimeout(spawnHeart, i*80); }
-    setInterval(spawnHeart, 520);
-
-    // Rank
-    const rankTitleEl = document.getElementById("rankTitle");
-    const rankListEl = document.getElementById("rankList");
-    const totalPill = document.getElementById("totalPill");
-    const countPill = document.getElementById("countPill");
-
-    function formatBRL(v){
-      try { return new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(v); }
-      catch { return "R$ " + Number(v).toFixed(2).replace(".", ","); }
-    }
-
-    async function loadRank(){
-      try{
-        const res = await fetch("/.netlify/functions/rank", { cache:"no-store" });
-        if(!res.ok) throw new Error("sem rank");
-        const data = await res.json();
-
-        rankTitleEl.textContent = (data.title || "RANK").toUpperCase();
-        const items = Array.isArray(data.items) ? data.items : [];
-        items.sort((a,b) => (Number(b.value)||0) - (Number(a.value)||0));
-
-        rankListEl.innerHTML = "";
-        let total = 0;
-
-        for(const it of items){
-          const v = Number(it.value)||0;
-          total += v;
-
-          const li = document.createElement("li");
-          const name = document.createElement("div");
-          name.className = "name";
-          name.textContent = it.name ?? "—";
-
-          const val = document.createElement("div");
-          val.className = "value";
-          val.textContent = formatBRL(v);
-
-          li.appendChild(name);
-          li.appendChild(val);
-          rankListEl.appendChild(li);
-        }
-
-        totalPill.textContent = "Total: " + formatBRL(total);
-        countPill.textContent = "Ajudas: " + items.length;
-
-        if(items.length === 0){
-          rankListEl.innerHTML = '<li><div class="name">Sem ajudas ainda</div><div class="value">—</div></li>';
-        }
-      } catch (e){
-        rankTitleEl.textContent = "RANK";
-        rankListEl.innerHTML = '<li><div class="name">Erro ao carregar</div><div class="value">—</div></li>';
-      }
-    }
-
-    loadRank();
-    tryAutoplay();
-    setInterval(loadRank, 10000);
+    pass.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") btn.click();
+    });
   </script>
 </body>
 </html>
+
 
