@@ -64,10 +64,11 @@
     .muted { opacity: .85; font-size: 13px; }
     .topbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 12px; }
     .topbar a { color:#fff; text-decoration:none; opacity:.9; }
+
     @media (max-width: 720px){
       .row{ grid-template-columns: 1fr; }
-      .actions{ width:100%; justify-content:space-between; }
       button{ width:100%; }
+      .actions{ width:100%; justify-content:space-between; }
     }
   </style>
 </head>
@@ -79,7 +80,6 @@
         <div class="muted">Somente você edita. O público só vê.</div>
       </div>
       <div class="actions">
-        <!-- ✅ Voltar funciona em qualquer domínio -->
         <a href="./" class="muted">← voltar ao site</a>
       </div>
     </div>
@@ -88,7 +88,7 @@
       <p>Digite sua senha de admin para editar o rank.</p>
       <div class="row" style="grid-template-columns: 1fr 180px;">
         <input id="token" type="password" placeholder="Senha admin" autocomplete="current-password" />
-        <button id="loginBtn">Entrar</button>
+        <button id="loginBtn" type="button">Entrar</button>
       </div>
       <div class="muted" id="authMsg"></div>
     </div>
@@ -97,7 +97,7 @@
       <div class="row">
         <input id="name" placeholder="Nome" autocomplete="off" />
         <input id="value" placeholder="Valor (ex: 25.50)" inputmode="decimal" autocomplete="off" />
-        <button id="addBtn">Adicionar</button>
+        <button id="addBtn" type="button">Adicionar</button>
       </div>
 
       <div class="actions" style="justify-content: space-between; margin-top:10px;">
@@ -127,12 +127,12 @@
     const authMsg  = document.getElementById("authMsg");
     const msgEl    = document.getElementById("msg");
 
-    const nameEl   = document.getElementById("name");
-    const valueEl  = document.getElementById("value");
-    const addBtn   = document.getElementById("addBtn");
-    const reloadBtn= document.getElementById("reloadBtn");
+    const nameEl = document.getElementById("name");
+    const valueEl = document.getElementById("value");
+    const addBtn = document.getElementById("addBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
     const clearBtn = document.getElementById("clearBtn");
-    const tbody    = document.getElementById("tbody");
+    const tbody = document.getElementById("tbody");
     const loginBtn = document.getElementById("loginBtn");
 
     let TOKEN = "";
@@ -169,8 +169,7 @@
 
       if(!res.ok) {
         const t = await res.text();
-        // tenta deixar mais claro
-        if(res.status === 401 || res.status === 403) throw new Error("Senha inválida.");
+        if(res.status === 401 || res.status === 403) throw new Error("Senha errada.");
         throw new Error(t || ("Erro ao salvar (HTTP " + res.status + ")."));
       }
       return res.json();
@@ -187,7 +186,6 @@
 
       for (const it of sorted) {
         const tr = document.createElement("tr");
-
         const td1 = document.createElement("td");
         td1.textContent = it.name ?? "—";
 
@@ -198,15 +196,14 @@
         const del = document.createElement("button");
         del.className = "ghost";
         del.textContent = "Excluir";
+        del.type = "button";
 
         del.onclick = async () => {
           try {
             setBusy(true);
             msgEl.textContent = "";
             const data = await apiGet();
-            const next = (data.items || []).filter(x =>
-              !(x.name === it.name && Number(x.value) === Number(it.value))
-            );
+            const next = (data.items || []).filter(x => !(x.name === it.name && Number(x.value) === Number(it.value)));
             data.items = next;
             await apiSave(data);
             msgEl.textContent = "✅ Excluído.";
@@ -239,16 +236,13 @@
 
     async function doLogin(){
       TOKEN = tokenEl.value.trim();
-      if(!TOKEN) {
-        authMsg.textContent = "Digite a senha.";
-        return;
-      }
+      if(!TOKEN) { authMsg.textContent = "Digite a senha."; return; }
+
       try {
         setBusy(true);
         authMsg.textContent = "Verificando...";
-        // testa salvando sem mudar nada (valida token)
         const data = await apiGet();
-        await apiSave(data);
+        await apiSave(data); // valida token
 
         authCard.style.display = "none";
         appCard.style.display = "block";
@@ -256,28 +250,19 @@
         msgEl.textContent = "✅ Logado.";
         await loadAndRender();
       } catch (e) {
-        authMsg.textContent = "⚠️ " + (e.message || "Senha inválida ou função não ativa.");
+        authMsg.textContent = "⚠️ " + e.message;
       } finally {
         setBusy(false);
       }
     }
 
     loginBtn.addEventListener("click", doLogin);
-
-    // Enter na senha
-    tokenEl.addEventListener("keydown", (e) => {
-      if(e.key === "Enter") doLogin();
-    });
-
-    // Enter no valor adiciona
-    valueEl.addEventListener("keydown", (e) => {
-      if(e.key === "Enter") addBtn.click();
-    });
+    tokenEl.addEventListener("keydown", (e) => { if(e.key === "Enter") doLogin(); });
+    valueEl.addEventListener("keydown", (e) => { if(e.key === "Enter") addBtn.click(); });
 
     addBtn.addEventListener("click", async () => {
       const name = nameEl.value.trim();
       const val = parseValue(valueEl.value);
-
       if(!name) { msgEl.textContent = "Digite um nome."; return; }
       if(val === null) { msgEl.textContent = "Digite um valor válido."; return; }
 
@@ -330,6 +315,7 @@
   </script>
 </body>
 </html>
+
 
 
 
