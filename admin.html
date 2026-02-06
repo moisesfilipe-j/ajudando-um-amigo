@@ -1,269 +1,255 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ADM — Ajude um amigo</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #0b3d14;
-      color: #fff;
-      padding: 18px;
-    }
-    .wrap {
-      max-width: 920px;
-      margin: 0 auto;
-    }
-    h1 { margin: 0 0 6px 0; }
-    p { margin: 0 0 14px 0; opacity: .92; }
-    .card {
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.22);
-      border-radius: 16px;
-      padding: 14px;
-      backdrop-filter: blur(8px);
-    }
-    .row { display: grid; grid-template-columns: 1fr 180px 120px; gap: 10px; margin: 10px 0; }
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.22);
-      background: rgba(0,0,0,.25);
-      color: #fff;
-      outline: none;
-    }
-    button {
-      border: 0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-weight: 800;
-      cursor: pointer;
-      background: rgba(255,255,255,.92);
-      color: #06210c;
-    }
-    button.ghost {
-      background: rgba(0,0,0,.25);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,.22);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      overflow: hidden;
-      border-radius: 12px;
-    }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,.12);
-      text-align: left;
-    }
-    th { opacity: .9; }
-    .actions { display:flex; gap:8px; }
-    .muted { opacity: .85; font-size: 13px; }
-    .topbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 12px; }
-    .topbar a { color:#fff; text-decoration:none; opacity:.9; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ajude um amigo</title>
+
+<style>
+:root {
+  --glass: rgba(255,255,255,.14);
+  --glass2: rgba(255,255,255,.10);
+  --stroke: rgba(255,255,255,.25);
+  --text: #ffffff;
+  --shadow: rgba(0,0,0,.35);
+}
+
+*{ box-sizing:border-box; }
+
+html,body{
+  margin:0;
+  height:100%;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+body{
+  color: var(--text);
+  overflow-x:hidden;
+  background:
+    radial-gradient(1200px 700px at 50% 30%, rgba(255,255,255,.10), transparent 60%),
+    linear-gradient(180deg, #0b3d14 0%, #0f6b22 35%, #0b4f1a 100%);
+}
+
+.wrap{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr min(540px,92vw) 1fr;
+  align-items:center;
+  padding:20px;
+}
+
+header{
+  position:absolute;
+  top:18px;
+  left:18px;
+  right:18px;
+  display:flex;
+  justify-content:center;
+}
+
+.brand{
+  padding:12px 18px;
+  border-radius:999px;
+  background:var(--glass);
+  border:1px solid var(--stroke);
+  backdrop-filter: blur(10px);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+
+.card{
+  grid-column:2;
+  border-radius:22px;
+  padding:22px;
+  background:linear-gradient(180deg,var(--glass),var(--glass2));
+  border:1px solid var(--stroke);
+  backdrop-filter:blur(14px);
+}
+
+.title{
+  text-align:center;
+  font-size:30px;
+  font-weight:900;
+}
+
+.subtitle{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.content{
+  display:grid;
+  gap:15px;
+  justify-items:center;
+}
+
+/* QR CORRIGIDO */
+.qrbox{
+  width:min(320px,90vw);
+  aspect-ratio:1/1;
+  background:#fff;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:visible;
+}
+
+#qrcode{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+#qrcode img,
+#qrcode canvas{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain;
+}
+
+.key{
+  width:100%;
+  max-width:500px;
+  padding:12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.30);
+  font-size:13px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+button{
+  padding:12px 14px;
+  border-radius:14px;
+  border:none;
+  font-weight:800;
+  cursor:pointer;
+  background:#ffffff;
+  color:#06210c;
+}
+
+/* Overlay Som */
+.soundOverlay{
+  position:fixed;
+  inset:0;
+  display:none;
+  place-items:center;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  z-index:50;
+  padding:18px;
+}
+
+.soundOverlay .panel{
+  width:min(520px,92vw);
+  border-radius:22px;
+  background: rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow: 0 24px 60px rgba(0,0,0,.40);
+  padding:18px;
+  text-align:center;
+}
+
+@media(max-width:980px){
+  .wrap{
+    grid-template-columns:1fr;
+  }
+  .card{
+    grid-column:1;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div>
-        <h1>ADM — Rank</h1>
-        <div class="muted">Somente você edita. O público só vê.</div>
+
+<header>
+  <div class="brand">Ajude um amigo</div>
+</header>
+
+<div class="wrap">
+  <main class="card">
+    <h1 class="title">Ajude um amigo</h1>
+    <p class="subtitle">Escaneie o QR Code ou copie a chave Pix 🙏</p>
+
+    <div class="content">
+      <div class="qrbox">
+        <div id="qrcode"></div>
       </div>
-      <div class="actions">
-        <a href="/" class="muted">← voltar ao site</a>
+
+      <div class="key" id="pixKey">
+        2ef2b7a6-bfb3-4cf4-a164-536e002aa6dc
       </div>
+
+      <button onclick="copyPix()">Copiar chave Pix</button>
     </div>
+  </main>
+</div>
 
-    <div class="card" id="authCard">
-      <p>Digite sua senha de admin para editar o rank.</p>
-      <div class="row" style="grid-template-columns: 1fr 180px;">
-        <input id="token" type="password" placeholder="Senha admin" />
-        <button id="loginBtn">Entrar</button>
-      </div>
-      <div class="muted" id="authMsg"></div>
-    </div>
+<!-- ÁUDIO -->
+<audio id="bgAudio" src="musica.mp3" preload="auto" loop></audio>
 
-    <div class="card" id="appCard" style="display:none; margin-top:14px;">
-      <div class="row">
-        <input id="name" placeholder="Nome" />
-        <input id="value" placeholder="Valor (ex: 25.50)" />
-        <button id="addBtn">Adicionar</button>
-      </div>
-
-      <div class="actions" style="justify-content: space-between; margin-top:10px;">
-        <button class="ghost" id="reloadBtn">Recarregar</button>
-        <button class="ghost" id="clearBtn">Zerar lista</button>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Valor (R$)</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-
-      <div class="muted" id="msg" style="margin-top:10px;"></div>
-    </div>
+<div class="soundOverlay" id="soundOverlay">
+  <div class="panel">
+    <h3>Ativar som</h3>
+    <p>Seu navegador bloqueou o áudio automático. Toque abaixo para ativar 🎵</p>
+    <button id="enableSoundBtn">🔊 Ativar som</button>
   </div>
+</div>
 
-  <script>
-    const authCard = document.getElementById("authCard");
-    const appCard  = document.getElementById("appCard");
-    const tokenEl  = document.getElementById("token");
-    const authMsg  = document.getElementById("authMsg");
-    const msgEl    = document.getElementById("msg");
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
-    const nameEl = document.getElementById("name");
-    const valueEl = document.getElementById("value");
-    const addBtn = document.getElementById("addBtn");
-    const reloadBtn = document.getElementById("reloadBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const tbody = document.getElementById("tbody");
+<script>
+const PIX_KEY = "2ef2b7a6-bfb3-4cf4-a164-536e002aa6dc";
 
-    let TOKEN = "";
+new QRCode(document.getElementById("qrcode"), {
+  text: PIX_KEY,
+  width: 300,
+  height: 300,
+  correctLevel: QRCode.CorrectLevel.M
+});
 
-    function parseValue(v) {
-      const s = String(v).trim().replace(",", ".");
-      const n = Number(s);
-      if (Number.isNaN(n) || n < 0) return null;
-      return Math.round(n * 100) / 100;
-    }
+function copyPix(){
+  navigator.clipboard.writeText(PIX_KEY);
+  alert("Chave copiada!");
+}
 
-    async function apiGet() {
-      const res = await fetch("/.netlify/functions/rank", { cache:"no-store" });
-      if(!res.ok) throw new Error("Erro GET");
-      return res.json();
-    }
+/* MÚSICA */
+const audio = document.getElementById("bgAudio");
+const overlay = document.getElementById("soundOverlay");
+const enableSoundBtn = document.getElementById("enableSoundBtn");
 
-    async function apiSave(data) {
-      const res = await fetch("/.netlify/functions/rank", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "authorization": "Bearer " + TOKEN
-        },
-        body: JSON.stringify(data)
-      });
-      if(!res.ok) {
-        const t = await res.text();
-        throw new Error(t || "Erro POST");
-      }
-      return res.json();
-    }
+async function tryAutoplay(){
+  try{
+    await audio.play();
+  } catch (err){
+    overlay.style.display = "grid";
+  }
+}
 
-    function render(items) {
-      tbody.innerHTML = "";
-      const sorted = [...items].sort((a,b) => (Number(b.value)||0) - (Number(a.value)||0));
-      for (const it of sorted) {
-        const tr = document.createElement("tr");
-        const td1 = document.createElement("td");
-        td1.textContent = it.name ?? "—";
-        const td2 = document.createElement("td");
-        td2.textContent = String(Number(it.value)||0).replace(".", ",");
-        const td3 = document.createElement("td");
-        const del = document.createElement("button");
-        del.className = "ghost";
-        del.textContent = "Excluir";
-        del.onclick = async () => {
-          try {
-            const data = await apiGet();
-            const next = (data.items || []).filter(x => !(x.name === it.name && Number(x.value) === Number(it.value)));
-            data.items = next;
-            await apiSave(data);
-            msgEl.textContent = "✅ Excluído.";
-            await loadAndRender();
-          } catch(e) {
-            msgEl.textContent = "⚠️ " + e.message;
-          }
-        };
-        td3.appendChild(del);
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        tr.appendChild(td3);
-        tbody.appendChild(tr);
-      }
-      if(sorted.length === 0) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = "<td colspan='3' class='muted'>Sem itens. Adicione acima.</td>";
-        tbody.appendChild(tr);
-      }
-    }
+async function enableSound(){
+  overlay.style.display = "none";
+  try{
+    await audio.play();
+  } catch (e){}
+}
 
-    async function loadAndRender() {
-      const data = await apiGet();
-      render(data.items || []);
-    }
+enableSoundBtn.addEventListener("click", enableSound);
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      TOKEN = tokenEl.value.trim();
-      if(!TOKEN) {
-        authMsg.textContent = "Digite a senha.";
-        return;
-      }
-      try {
-        // testa salvando sem mudar nada (valida token)
-        const data = await apiGet();
-        await apiSave(data);
-        authCard.style.display = "none";
-        appCard.style.display = "block";
-        authMsg.textContent = "";
-        msgEl.textContent = "✅ Logado.";
-        await loadAndRender();
-      } catch (e) {
-        authMsg.textContent = "Senha inválida ou função não ativa.";
-      }
-    });
+window.addEventListener("pointerdown", () => {
+  if(audio.paused){
+    audio.play().then(() => overlay.style.display = "none").catch(()=>{});
+  }
+}, { once: true });
 
-    addBtn.addEventListener("click", async () => {
-      const name = nameEl.value.trim();
-      const val = parseValue(valueEl.value);
-      if(!name) { msgEl.textContent = "Digite um nome."; return; }
-      if(val === null) { msgEl.textContent = "Digite um valor válido."; return; }
-      try {
-        const data = await apiGet();
-        data.items = Array.isArray(data.items) ? data.items : [];
-        data.items.push({ name, value: val });
-        await apiSave(data);
-        nameEl.value = "";
-        valueEl.value = "";
-        msgEl.textContent = "✅ Adicionado.";
-        await loadAndRender();
-      } catch(e) {
-        msgEl.textContent = "⚠️ " + e.message;
-      }
-    });
+tryAutoplay();
+</script>
 
-    reloadBtn.addEventListener("click", async () => {
-      try {
-        await loadAndRender();
-        msgEl.textContent = "✅ Recarregado.";
-      } catch(e) {
-        msgEl.textContent = "⚠️ " + e.message;
-      }
-    });
-
-    clearBtn.addEventListener("click", async () => {
-      if(!confirm("Zerar o rank?")) return;
-      try {
-        const data = await apiGet();
-        data.items = [];
-        await apiSave(data);
-        msgEl.textContent = "✅ Zerado.";
-        await loadAndRender();
-      } catch(e) {
-        msgEl.textContent = "⚠️ " + e.message;
-      }
-    });
-  </script>
 </body>
 </html>
+
