@@ -12,10 +12,7 @@
       color: #fff;
       padding: 18px;
     }
-    .wrap {
-      max-width: 920px;
-      margin: 0 auto;
-    }
+    .wrap { max-width: 920px; margin: 0 auto; }
     h1 { margin: 0 0 6px 0; }
     p { margin: 0 0 14px 0; opacity: .92; }
     .card {
@@ -44,6 +41,7 @@
       background: rgba(255,255,255,.92);
       color: #06210c;
     }
+    button[disabled]{ opacity:.65; cursor:not-allowed; }
     button.ghost {
       background: rgba(0,0,0,.25);
       color: #fff;
@@ -66,6 +64,11 @@
     .muted { opacity: .85; font-size: 13px; }
     .topbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 12px; }
     .topbar a { color:#fff; text-decoration:none; opacity:.9; }
+    @media (max-width: 720px){
+      .row{ grid-template-columns: 1fr; }
+      .actions{ width:100%; justify-content:space-between; }
+      button{ width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -76,14 +79,15 @@
         <div class="muted">Somente você edita. O público só vê.</div>
       </div>
       <div class="actions">
-        <a href="/" class="muted">← voltar ao site</a>
+        <!-- ✅ Voltar funciona em qualquer domínio -->
+        <a href="./" class="muted">← voltar ao site</a>
       </div>
     </div>
 
     <div class="card" id="authCard">
       <p>Digite sua senha de admin para editar o rank.</p>
       <div class="row" style="grid-template-columns: 1fr 180px;">
-        <input id="token" type="password" placeholder="Senha admin" />
+        <input id="token" type="password" placeholder="Senha admin" autocomplete="current-password" />
         <button id="loginBtn">Entrar</button>
       </div>
       <div class="muted" id="authMsg"></div>
@@ -91,14 +95,14 @@
 
     <div class="card" id="appCard" style="display:none; margin-top:14px;">
       <div class="row">
-        <input id="name" placeholder="Nome" />
-        <input id="value" placeholder="Valor (ex: 25.50)" />
+        <input id="name" placeholder="Nome" autocomplete="off" />
+        <input id="value" placeholder="Valor (ex: 25.50)" inputmode="decimal" autocomplete="off" />
         <button id="addBtn">Adicionar</button>
       </div>
 
       <div class="actions" style="justify-content: space-between; margin-top:10px;">
-        <button class="ghost" id="reloadBtn">Recarregar</button>
-        <button class="ghost" id="clearBtn">Zerar lista</button>
+        <button class="ghost" id="reloadBtn" type="button">Recarregar</button>
+        <button class="ghost" id="clearBtn" type="button">Zerar lista</button>
       </div>
 
       <table>
@@ -123,14 +127,22 @@
     const authMsg  = document.getElementById("authMsg");
     const msgEl    = document.getElementById("msg");
 
-    const nameEl = document.getElementById("name");
-    const valueEl = document.getElementById("value");
-    const addBtn = document.getElementById("addBtn");
-    const reloadBtn = document.getElementById("reloadBtn");
+    const nameEl   = document.getElementById("name");
+    const valueEl  = document.getElementById("value");
+    const addBtn   = document.getElementById("addBtn");
+    const reloadBtn= document.getElementById("reloadBtn");
     const clearBtn = document.getElementById("clearBtn");
-    const tbody = document.getElementById("tbody");
+    const tbody    = document.getElementById("tbody");
+    const loginBtn = document.getElementById("loginBtn");
 
     let TOKEN = "";
+
+    function setBusy(on){
+      loginBtn.disabled = on;
+      addBtn.disabled = on;
+      reloadBtn.disabled = on;
+      clearBtn.disabled = on;
+    }
 
     function parseValue(v) {
       const s = String(v).trim().replace(",", ".");
@@ -141,7 +153,7 @@
 
     async function apiGet() {
       const res = await fetch("/.netlify/functions/rank", { cache:"no-store" });
-      if(!res.ok) throw new Error("Erro GET");
+      if(!res.ok) throw new Error("Erro ao carregar rank (GET).");
       return res.json();
     }
 
@@ -154,44 +166,65 @@
         },
         body: JSON.stringify(data)
       });
+
       if(!res.ok) {
         const t = await res.text();
-        throw new Error(t || "Erro POST");
+        // tenta deixar mais claro
+        if(res.status === 401 || res.status === 403) throw new Error("Senha inválida.");
+        throw new Error(t || ("Erro ao salvar (HTTP " + res.status + ")."));
       }
       return res.json();
+    }
+
+    function formatValue(v){
+      const n = Number(v)||0;
+      return String(n.toFixed(2)).replace(".", ",");
     }
 
     function render(items) {
       tbody.innerHTML = "";
       const sorted = [...items].sort((a,b) => (Number(b.value)||0) - (Number(a.value)||0));
+
       for (const it of sorted) {
         const tr = document.createElement("tr");
+
         const td1 = document.createElement("td");
         td1.textContent = it.name ?? "—";
+
         const td2 = document.createElement("td");
-        td2.textContent = String(Number(it.value)||0).replace(".", ",");
+        td2.textContent = formatValue(it.value);
+
         const td3 = document.createElement("td");
         const del = document.createElement("button");
         del.className = "ghost";
         del.textContent = "Excluir";
+
         del.onclick = async () => {
           try {
+            setBusy(true);
+            msgEl.textContent = "";
             const data = await apiGet();
-            const next = (data.items || []).filter(x => !(x.name === it.name && Number(x.value) === Number(it.value)));
+            const next = (data.items || []).filter(x =>
+              !(x.name === it.name && Number(x.value) === Number(it.value))
+            );
             data.items = next;
             await apiSave(data);
             msgEl.textContent = "✅ Excluído.";
             await loadAndRender();
           } catch(e) {
             msgEl.textContent = "⚠️ " + e.message;
+          } finally {
+            setBusy(false);
           }
         };
+
         td3.appendChild(del);
         tr.appendChild(td1);
         tr.appendChild(td2);
         tr.appendChild(td3);
         tbody.appendChild(tr);
       }
+
       if(sorted.length === 0) {
         const tr = document.createElement("tr");
         tr.innerHTML = "<td colspan='3' class='muted'>Sem itens. Adicione acima.</td>";
@@ -204,57 +237,85 @@
       render(data.items || []);
     }
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
+    async function doLogin(){
       TOKEN = tokenEl.value.trim();
       if(!TOKEN) {
         authMsg.textContent = "Digite a senha.";
         return;
       }
       try {
+        setBusy(true);
+        authMsg.textContent = "Verificando...";
         // testa salvando sem mudar nada (valida token)
         const data = await apiGet();
         await apiSave(data);
+
         authCard.style.display = "none";
         appCard.style.display = "block";
         authMsg.textContent = "";
         msgEl.textContent = "✅ Logado.";
         await loadAndRender();
       } catch (e) {
-        authMsg.textContent = "Senha inválida ou função não ativa.";
+        authMsg.textContent = "⚠️ " + (e.message || "Senha inválida ou função não ativa.");
+      } finally {
+        setBusy(false);
       }
+    }
+
+    loginBtn.addEventListener("click", doLogin);
+
+    // Enter na senha
+    tokenEl.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") doLogin();
+    });
+
+    // Enter no valor adiciona
+    valueEl.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") addBtn.click();
     });
 
     addBtn.addEventListener("click", async () => {
       const name = nameEl.value.trim();
       const val = parseValue(valueEl.value);
+
       if(!name) { msgEl.textContent = "Digite um nome."; return; }
       if(val === null) { msgEl.textContent = "Digite um valor válido."; return; }
+
       try {
+        setBusy(true);
+        msgEl.textContent = "";
         const data = await apiGet();
         data.items = Array.isArray(data.items) ? data.items : [];
         data.items.push({ name, value: val });
         await apiSave(data);
+
         nameEl.value = "";
         valueEl.value = "";
         msgEl.textContent = "✅ Adicionado.";
         await loadAndRender();
       } catch(e) {
         msgEl.textContent = "⚠️ " + e.message;
+      } finally {
+        setBusy(false);
       }
     });
 
     reloadBtn.addEventListener("click", async () => {
       try {
+        setBusy(true);
         await loadAndRender();
         msgEl.textContent = "✅ Recarregado.";
       } catch(e) {
         msgEl.textContent = "⚠️ " + e.message;
+      } finally {
+        setBusy(false);
       }
     });
 
     clearBtn.addEventListener("click", async () => {
       if(!confirm("Zerar o rank?")) return;
       try {
+        setBusy(true);
         const data = await apiGet();
         data.items = [];
         await apiSave(data);
@@ -262,11 +323,14 @@
         await loadAndRender();
       } catch(e) {
         msgEl.textContent = "⚠️ " + e.message;
+      } finally {
+        setBusy(false);
       }
     });
   </script>
 </body>
 </html>
+
 
 
 
