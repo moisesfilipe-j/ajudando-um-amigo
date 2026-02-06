@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ADM — Ajude um amigo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0b3d14;
+      color: #fff;
+      padding: 18px;
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    h1 { margin: 0 0 6px 0; }
+    p { margin: 0 0 14px 0; opacity: .92; }
+    .card {
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 16px;
+      padding: 14px;
+      backdrop-filter: blur(8px);
+    }
+    .row { display: grid; grid-template-columns: 1fr 180px 120px; gap: 10px; margin: 10px 0; }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(0,0,0,.25);
+      color: #fff;
+      outline: none;
+    }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 800;
+      cursor: pointer;
+      background: rgba(255,255,255,.92);
+      color: #06210c;
+    }
+    button.ghost {
+      background: rgba(0,0,0,.25);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.22);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      text-align: left;
+    }
+    th { opacity: .9; }
+    .actions { display:flex; gap:8px; }
+    .muted { opacity: .85; font-size: 13px; }
+    .topbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+    .topbar a { color:#fff; text-decoration:none; opacity:.9; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>ADM — Rank</h1>
+        <div class="muted">Somente você edita. O público só vê.</div>
+      </div>
+      <div class="actions">
+        <a href="/" class="muted">← voltar ao site</a>
+      </div>
+    </div>
+
+    <div class="card" id="authCard">
+      <p>Digite sua senha de admin para editar o rank.</p>
+      <div class="row" style="grid-template-columns: 1fr 180px;">
+        <input id="token" type="password" placeholder="Senha admin" />
+        <button id="loginBtn">Entrar</button>
+      </div>
+      <div class="muted" id="authMsg"></div>
+    </div>
+
+    <div class="card" id="appCard" style="display:none; margin-top:14px;">
+      <div class="row">
+        <input id="name" placeholder="Nome" />
+        <input id="value" placeholder="Valor (ex: 25.50)" />
+        <button id="addBtn">Adicionar</button>
+      </div>
+
+      <div class="actions" style="justify-content: space-between; margin-top:10px;">
+        <button class="ghost" id="reloadBtn">Recarregar</button>
+        <button class="ghost" id="clearBtn">Zerar lista</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Valor (R$)</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div class="muted" id="msg" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <script>
+    const authCard = document.getElementById("authCard");
+    const appCard  = document.getElementById("appCard");
+    const tokenEl  = document.getElementById("token");
+    const authMsg  = document.getElementById("authMsg");
+    const msgEl    = document.getElementById("msg");
+
+    const nameEl = document.getElementById("name");
+    const valueEl = document.getElementById("value");
+    const addBtn = document.getElementById("addBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const tbody = document.getElementById("tbody");
+
+    let TOKEN = "";
+
+    function parseValue(v) {
+      const s = String(v).trim().replace(",", ".");
+      const n = Number(s);
+      if (Number.isNaN(n) || n < 0) return null;
+      return Math.round(n * 100) / 100;
+    }
+
+    async function apiGet() {
+      const res = await fetch("/.netlify/functions/rank", { cache:"no-store" });
+      if(!res.ok) throw new Error("Erro GET");
+      return res.json();
+    }
+
+    async function apiSave(data) {
+      const res = await fetch("/.netlify/functions/rank", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "authorization": "Bearer " + TOKEN
+        },
+        body: JSON.stringify(data)
+      });
+      if(!res.ok) {
+        const t = await res.text();
+        throw new Error(t || "Erro POST");
+      }
+      return res.json();
+    }
+
+    function render(items) {
+      tbody.innerHTML = "";
+      const sorted = [...items].sort((a,b) => (Number(b.value)||0) - (Number(a.value)||0));
+      for (const it of sorted) {
+        const tr = document.createElement("tr");
+        const td1 = document.createElement("td");
+        td1.textContent = it.name ?? "—";
+        const td2 = document.createElement("td");
+        td2.textContent = String(Number(it.value)||0).replace(".", ",");
+        const td3 = document.createElement("td");
+        const del = document.createElement("button");
+        del.className = "ghost";
+        del.textContent = "Excluir";
+        del.onclick = async () => {
+          try {
+            const data = await apiGet();
+            const next = (data.items || []).filter(x => !(x.name === it.name && Number(x.value) === Number(it.value)));
+            data.items = next;
+            await apiSave(data);
+            msgEl.textContent = "✅ Excluído.";
+            await loadAndRender();
+          } catch(e) {
+            msgEl.textContent = "⚠️ " + e.message;
+          }
+        };
+        td3.appendChild(del);
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tr.appendChild(td3);
+        tbody.appendChild(tr);
+      }
+      if(sorted.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = "<td colspan='3' class='muted'>Sem itens. Adicione acima.</td>";
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function loadAndRender() {
+      const data = await apiGet();
+      render(data.items || []);
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      TOKEN = tokenEl.value.trim();
+      if(!TOKEN) {
+        authMsg.textContent = "Digite a senha.";
+        return;
+      }
+      try {
+        // testa salvando sem mudar nada (valida token)
+        const data = await apiGet();
+        await apiSave(data);
+        authCard.style.display = "none";
+        appCard.style.display = "block";
+        authMsg.textContent = "";
+        msgEl.textContent = "✅ Logado.";
+        await loadAndRender();
+      } catch (e) {
+        authMsg.textContent = "Senha inválida ou função não ativa.";
+      }
+    });
+
+    addBtn.addEventListener("click", async () => {
+      const name = nameEl.value.trim();
+      const val = parseValue(valueEl.value);
+      if(!name) { msgEl.textContent = "Digite um nome."; return; }
+      if(val === null) { msgEl.textContent = "Digite um valor válido."; return; }
+      try {
+        const data = await apiGet();
+        data.items = Array.isArray(data.items) ? data.items : [];
+        data.items.push({ name, value: val });
+        await apiSave(data);
+        nameEl.value = "";
+        valueEl.value = "";
+        msgEl.textContent = "✅ Adicionado.";
+        await loadAndRender();
+      } catch(e) {
+        msgEl.textContent = "⚠️ " + e.message;
+      }
+    });
+
+    reloadBtn.addEventListener("click", async () => {
+      try {
+        await loadAndRender();
+        msgEl.textContent = "✅ Recarregado.";
+      } catch(e) {
+        msgEl.textContent = "⚠️ " + e.message;
+      }
+    });
+
+    clearBtn.addEventListener("click", async () => {
+      if(!confirm("Zerar o rank?")) return;
+      try {
+        const data = await apiGet();
+        data.items = [];
+        await apiSave(data);
+        msgEl.textContent = "✅ Zerado.";
+        await loadAndRender();
+      } catch(e) {
+        msgEl.textContent = "⚠️ " + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
