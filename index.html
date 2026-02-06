@@ -7,7 +7,7 @@
   <meta name="description" content="Ajude um amigo — contribuição via Pix" />
 
   <style>
-    :root{
+    :root {
       --glass: rgba(255,255,255,.14);
       --glass2: rgba(255,255,255,.10);
       --stroke: rgba(255,255,255,.25);
@@ -18,9 +18,11 @@
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 
+    /* ✅ FIX MOBILE: permite scroll e evita "tela gigante" */
     body{
       color: var(--text);
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       background:
         radial-gradient(1200px 700px at 50% 30%, rgba(255,255,255,.10), transparent 60%),
         linear-gradient(180deg, #0b3d14 0%, #0f6b22 35%, #0b4f1a 100%),
@@ -29,9 +31,10 @@
       background-blend-mode: screen, normal, overlay, overlay;
     }
 
+    /* ✅ FIX MOBILE: não trava em height:100% */
     .wrap{
       position:relative;
-      height:100%;
+      min-height:100vh;
       display:grid;
       grid-template-columns: 1fr min(540px, 92vw) 1fr;
       grid-template-rows: 1fr;
@@ -41,22 +44,21 @@
     }
 
     header{
-      position:absolute; top:18px; left:18px; right:18px;
-      display:flex; justify-content:center; pointer-events:none;
+      position:sticky; top:0;
+      padding-top:18px;
+      display:flex; justify-content:center;
+      pointer-events:none;
+      z-index:10;
     }
 
     .brand{
       pointer-events:auto;
-      padding:12px 18px;
-      border-radius:999px;
-      background:var(--glass);
-      border:1px solid var(--stroke);
+      padding:12px 18px; border-radius:999px;
+      background:var(--glass); border:1px solid var(--stroke);
       backdrop-filter: blur(10px);
       box-shadow: 0 16px 40px var(--shadow);
-      text-transform: uppercase;
-      letter-spacing:.12em;
-      font-weight:800;
-      font-size:14px;
+      text-transform: uppercase; letter-spacing:.12em;
+      font-weight:800; font-size:14px;
     }
 
     .card{
@@ -74,10 +76,9 @@
 
     .title{ font-size: clamp(26px, 3.2vw, 42px); margin:0 0 6px 0; text-align:center; font-weight:900; }
     .subtitle{ margin:0 0 18px 0; text-align:center; opacity:.95; }
-
     .content{ display:grid; gap:14px; justify-items:center; }
 
-    /* ✅ QR CODE (corrigido para não cortar no celular) */
+    /* ✅ QR FIX: não corta no celular */
     .qrbox{
       width:min(320px, 90vw);
       aspect-ratio:1/1;
@@ -87,23 +88,23 @@
       align-items:center;
       justify-content:center;
       box-shadow:0 18px 40px rgba(0,0,0,.30);
-      overflow: visible; /* era hidden */
+      overflow: visible; /* importante */
     }
 
     #qrcode{
-      width: 100%;
-      height: 100%;
+      width:100%;
+      height:100%;
       display:flex;
       align-items:center;
       justify-content:center;
-      transform: none; /* remove zoom */
+      transform:none;
     }
 
     #qrcode img,
     #qrcode canvas{
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: contain;
+      width:100% !important;
+      height:100% !important;
+      object-fit:contain;
       display:block;
     }
 
@@ -125,20 +126,18 @@
       box-shadow:0 12px 24px rgba(0,0,0,.28);
       transition: transform .08s ease, filter .08s ease;
     }
-
     button:hover{ filter: brightness(1.02); }
     button:active{ transform: translateY(1px) scale(.99); }
 
     .ghost{
-      color:#fff;
-      background: rgba(0,0,0,.28);
+      color:#fff; background: rgba(0,0,0,.28);
       border:1px solid rgba(255,255,255,.20);
       box-shadow:0 12px 24px rgba(0,0,0,.18);
     }
 
     .hint{ margin:8px 0 0 0; opacity:.9; text-align:center; font-size:13px; }
 
-    /* Rank lateral */
+    /* Rank */
     .rank{
       grid-column:3;
       justify-self:end;
@@ -172,25 +171,31 @@
       background: rgba(255,255,255,.07);
       border:1px solid rgba(255,255,255,.16);
     }
-
     .rank ul{ list-style:none; margin:0; padding:10px; display:grid; gap:8px; }
-
     .rank li{
       display:flex; align-items:center; justify-content:space-between;
       gap:10px; padding:10px 12px;
       border-radius:14px; background: rgba(0,0,0,.22);
       border:1px solid rgba(255,255,255,.14);
     }
-
     .rank .name{ font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .rank .value{ font-variant-numeric: tabular-nums; font-weight:900; white-space:nowrap; }
     .rank .foot{ text-align:center; font-size:12px; opacity:.85; padding-bottom:2px; }
 
+    /* ✅ MOBILE */
     @media (max-width: 980px){
-      .wrap{ grid-template-columns:1fr; grid-template-rows:auto auto; align-content:start; overflow:auto; }
-      body{ overflow:auto; }
+      .wrap{
+        grid-template-columns:1fr;
+        grid-template-rows:auto auto;
+        align-content:start;
+      }
       .card{ grid-column:1; }
-      .rank{ grid-column:1; width:100%; height: 360px; justify-self:center; }
+      .rank{
+        grid-column:1;
+        width:100%;
+        height: 360px;
+        justify-self:center;
+      }
     }
 
     /* Corações */
@@ -201,7 +206,6 @@
       animation: floatUp linear forwards;
       pointer-events:none; user-select:none;
     }
-
     @keyframes floatUp{
       0%{ transform: translateY(0) translateX(0) scale(1); opacity:0; }
       10%{ opacity:.92; }
@@ -216,7 +220,6 @@
       backdrop-filter: blur(6px);
       z-index:50; padding:18px;
     }
-
     .soundOverlay .panel{
       width: min(520px, 92vw);
       border-radius:22px;
@@ -225,7 +228,6 @@
       box-shadow: 0 24px 60px rgba(0,0,0,.40);
       padding:18px; text-align:center;
     }
-
     .soundOverlay .panel h3{ margin:0 0 6px 0; font-size:18px; }
     .soundOverlay .panel p{ margin:0 0 14px 0; opacity:.9; }
   </style>
@@ -249,7 +251,12 @@
         <div class="btnrow">
           <button id="copyBtn">Copiar chave Pix</button>
           <button id="soundBtn" class="ghost" type="button">🔊 Som</button>
-          <a class="ghost" href="/admin.html" style="text-decoration:none;display:inline-block;padding:12px 14px;border-radius:14px;font-weight:800;">ADM</a>
+
+          <!-- ✅ ADM mantido -->
+          <a class="ghost" href="/admin.html"
+             style="text-decoration:none;display:inline-block;padding:12px 14px;border-radius:14px;font-weight:800;">
+             ADM
+          </a>
         </div>
 
         <p class="hint" id="status">Dica: se o som não tocar, clique em “Som”.</p>
@@ -267,7 +274,6 @@
     </aside>
   </div>
 
-  <!-- Música (troque o arquivo aqui se quiser mudar) -->
   <audio id="bgAudio" src="musica.mp3" preload="auto" loop></audio>
 
   <div class="soundOverlay" id="soundOverlay" role="dialog" aria-modal="true">
@@ -283,7 +289,6 @@
   <script>
     const PIX_KEY = "2ef2b7a6-bfb3-4cf4-a164-536e002aa6dc";
 
-    // ✅ QR um pouco maior e responsivo (CSS garante que não corta)
     new QRCode(document.getElementById("qrcode"), {
       text: PIX_KEY,
       width: 300,
@@ -294,13 +299,12 @@
     // Copiar Pix
     const copyBtn = document.getElementById("copyBtn");
     const statusEl = document.getElementById("status");
-
     copyBtn.addEventListener("click", async () => {
-      try{
+      try {
         await navigator.clipboard.writeText(PIX_KEY);
         statusEl.textContent = "✅ Chave copiada! Cole no seu banco.";
         popHearts(10);
-      } catch (e){
+      } catch (e) {
         statusEl.textContent = "⚠️ Não consegui copiar automaticamente. Selecione e copie a chave.";
       }
     });
@@ -384,7 +388,7 @@
     }
 
     async function loadRank(){
-      try {
+      try{
         const res = await fetch("/.netlify/functions/rank", { cache:"no-store" });
         if(!res.ok) throw new Error("sem rank");
         const data = await res.json();
@@ -420,7 +424,7 @@
         if(items.length === 0){
           rankListEl.innerHTML = '<li><div class="name">Sem ajudas ainda</div><div class="value">—</div></li>';
         }
-      } catch (e) {
+      } catch (e){
         rankTitleEl.textContent = "RANK";
         rankListEl.innerHTML = '<li><div class="name">Erro ao carregar</div><div class="value">—</div></li>';
       }
@@ -432,6 +436,3 @@
   </script>
 </body>
 </html>
-
-
-
